@@ -27,3 +27,4 @@ In the animate function, there's a commented out block of code that displays the
 
 Also in the animate function, the ctx fillstyle can be changed so that particles leave more of a trail if you change the opacity.
 
+# Flow-Field-Simulation
