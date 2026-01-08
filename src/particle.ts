@@ -1,71 +1,59 @@
-import { Vector } from "./vector";
-
 export class Particle {
 
     speedLimit: number;
     size: number;
-    position: Vector;
-    velocity: Vector;
-    acceleration: Vector;
+    px: number;
+    py: number;
+    vx: number;
+    vy: number;
     color: string;
 
     constructor(x: number, y: number, size: number, speedLimit: number, color: string){
-        this.position = new Vector(x, y);
-        this.velocity = new Vector();
-        this.acceleration = new Vector();
+        this.px = x;
+        this.py = y;
+        this.vx = 0;
+        this.vy = 0;
         this.speedLimit = speedLimit;
         this.size = size;
         this.color = color;
     }
 
-    update(flow: Vector[][], size: number){
-        this.position.add(this.velocity);
+    update(flow: Float32Array, size: number, rows: number, cols: number){
+        this.px += this.vx;
+        this.py += this.vy;
         this.checkEdge();
-        this.velocity.add(this.acceleration);
+
+        var i = Math.floor(this.px / size);
+        var j = Math.floor(this.py / size);
+        i = Math.max(0, Math.min(i, cols - 1));
+        j = Math.max(0, Math.min(j, rows - 1));
+        let angle = flow[i + j * cols];
+        
+        this.vx += Math.cos(angle);
+        this.vy += Math.sin(angle);
         this.limitVelocity();
-        this.acceleration.x = 0;
-        this.acceleration.y = 0;
-        this.acceleration.add(this.findAccelVector(flow, size));
-    }
-
-    findAccelVector(flow: Vector[][], size: number) {
-        var i = Math.floor(this.position.x / size);
-        var j = Math.floor(this.position.y / size);
-        i = Math.max(0, Math.min(i, flow[0].length - 1));
-        j = Math.max(0, Math.min(j, flow.length - 1));
-        var AccelVector = flow[j][i];
-
-        return AccelVector;
     }
 
     limitVelocity(){
-        var magnitude = Math.sqrt((this.velocity.x * this.velocity.x) + (this.velocity.y * this.velocity.y));
-        if(magnitude > this.speedLimit) {
-            this.velocity.x = Math.cos(this.velocity.getAngle()) * this.speedLimit;
-            this.velocity.y = Math.sin(this.velocity.getAngle()) * this.speedLimit
+        const v2 = this.vx * this.vx + this.vy * this.vy;
+        if (v2 > this.speedLimit * this.speedLimit) {
+            const inv = this.speedLimit / Math.sqrt(v2);
+            this.vx *= inv;
+            this.vy *= inv;
         }
     }
 
     checkEdge(){
-        if(this.position.x > window.innerWidth){
-            this.position.x = 0;
-        } else if(this.position.x < 0){
-            this.position.x = window.innerWidth;
+        if(this.px > window.innerWidth){
+            this.px = 0;
+        } else if(this.px < 0){
+            this.px = window.innerWidth;
         }
 
-        if(this.position.y > window.innerHeight){
-            this.position.y = 0;
-        } else if(this.position.y < 0){
-            this.position.y = window.innerHeight;
+        if(this.py > window.innerHeight){
+            this.py = 0;
+        } else if(this.py < 0){
+            this.py = window.innerHeight;
         }
-    }
-
-    display(ctx: CanvasRenderingContext2D){
-        const x = Math.round(this.position.x);
-        const y = Math.round(this.position.y);
-        ctx.fillStyle = this.color;
-        ctx.beginPath();
-        ctx.ellipse(x, y, this.size, this.size, 2 * Math.PI, 0, 2 * Math.PI);
-        ctx.fill();
     }
 }
